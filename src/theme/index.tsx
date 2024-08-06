@@ -10,9 +10,10 @@ export const theme = {
     GRAY_300: "#8D8D99",
     GRAY_400: "#7C7C8A",
     GRAY_500: "#505059",
-    GRAY_800: "#202024",
-    GRAY_700: "#29292E",
     GRAY_600: "#323238",
+    GRAY_700: "#29292E",
+    GRAY_800: "#202024",
+    BLACK: "#000000",
   },
   FONT_FAMILY: {
     REGULAR: "Roboto_400Regular",
@@ -20,6 +21,8 @@ export const theme = {
   },
 
   FONT_SIZE: {
+    XXXS: 8,
+    XXS: 10,
     XS: 12,
     SM: 14,
     MD: 16,
@@ -27,5 +30,6 @@ export const theme = {
     XL: 20,
     XXL: 24,
     XXXL: 32,
+    XXXXXL: 48,
   },
 };

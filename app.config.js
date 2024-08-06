@@ -16,6 +16,7 @@ module.exports = {
       backgroundColor: "#ffffff",
     },
     ios: {
+      bundleIdentifier: "com.yuricruger.runtracker",
       supportsTablet: true,
       config: {
         googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
@@ -25,6 +26,7 @@ module.exports = {
       },
     },
     android: {
+      package: "com.yuricruger.runtracker",
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: "#ffffff",
@@ -45,6 +47,7 @@ module.exports = {
       favicon: "./assets/favicon.png",
     },
     plugins: [
+      ["expo-font"],
       [
         "expo-location",
         {

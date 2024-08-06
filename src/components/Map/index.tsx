@@ -1,27 +1,55 @@
-import { theme } from "@/theme";
 import { useRef } from "react";
 import MapView, {
   MapViewProps,
   LatLng,
   PROVIDER_GOOGLE,
-  Marker,
   Polyline,
+  Marker,
 } from "react-native-maps";
+import { theme } from "@/theme";
+import { SneakerMove } from "phosphor-react-native";
 
 type Props = MapViewProps & {
   coordinates: LatLng[];
+  hasStarted?: boolean;
 };
 
-export function Map({ coordinates }: Props) {
+export function Map({ coordinates, hasStarted = false }: Props) {
   const mapRef = useRef<MapView>(null);
 
   const lastCoordinate = coordinates[coordinates.length - 1];
+  const startCoordinate = coordinates[0];
+
+  function getRegionForCoordinates(coords: LatLng[]) {
+    if (coords.length === 0) return undefined;
+
+    const latitudes = coords.map((coord) => coord.latitude);
+    const longitudes = coords.map((coord) => coord.longitude);
+
+    const latitudeMin = Math.min(...latitudes);
+    const latitudeMax = Math.max(...latitudes);
+    const longitudeMin = Math.min(...longitudes);
+    const longitudeMax = Math.max(...longitudes);
+
+    const latitudeDelta = latitudeMax - latitudeMin;
+    const longitudeDelta = longitudeMax - longitudeMin;
+
+    const extraPadding = 0.004;
+
+    return {
+      latitude: latitudeMin + latitudeDelta / 2,
+      longitude: longitudeMin + longitudeDelta / 2,
+      latitudeDelta: latitudeDelta + extraPadding,
+      longitudeDelta: longitudeDelta + extraPadding,
+    };
+  }
 
   async function onMapLoaded() {
     if (coordinates.length > 1) {
-      mapRef.current?.fitToSuppliedMarkers(["departure", "arrival"], {
-        edgePadding: { top: 100, bottom: 100, right: 100, left: 100 },
-      });
+      const region = getRegionForCoordinates(coordinates);
+      if (region) {
+        mapRef.current?.animateToRegion(region, 1000);
+      }
     }
   }
 
@@ -29,26 +57,36 @@ export function Map({ coordinates }: Props) {
     <MapView
       ref={mapRef}
       provider={PROVIDER_GOOGLE}
-      style={{ width: "100%", height: 300 }}
-      region={{
-        latitude: lastCoordinate.latitude,
-        longitude: lastCoordinate.longitude,
-        latitudeDelta: 0.005,
-        longitudeDelta: 0.005,
-      }}
+      style={{ width: "100%", flex: 1 }}
+      region={
+        coordinates.length > 1
+          ? getRegionForCoordinates(coordinates)
+          : {
+              latitude: lastCoordinate.latitude,
+              longitude: lastCoordinate.longitude,
+              latitudeDelta: 0.005,
+              longitudeDelta: 0.005,
+            }
+      }
       onMapLoaded={onMapLoaded}
     >
-      <Marker identifier="departure" coordinate={coordinates[0]} />
-
-      {coordinates.length > 1 && (
-        <Marker identifier="arrival" coordinate={lastCoordinate} />
+      {!hasStarted && startCoordinate && (
+        <Marker identifier="departure" coordinate={startCoordinate}>
+          <SneakerMove
+            size={32}
+            color={theme.COLORS.BRAND_LIGHT}
+            weight="fill"
+          />
+        </Marker>
       )}
 
-      <Polyline
-        coordinates={[...coordinates]}
-        strokeColor={theme.COLORS.GRAY_700}
-        strokeWidth={5}
-      />
+      {coordinates.length > 1 && (
+        <Polyline
+          coordinates={coordinates}
+          strokeColor={theme.COLORS.BRAND_LIGHT}
+          strokeWidth={5}
+        />
+      )}
     </MapView>
   );
 }

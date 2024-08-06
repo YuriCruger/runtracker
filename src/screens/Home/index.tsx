@@ -1,138 +1,186 @@
-import React, { useEffect, useState } from "react";
-import { Alert, Text, TouchableOpacity } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Alert, FlatList } from "react-native";
+import { Swipeable } from "react-native-gesture-handler";
 
-import { Container, Message } from "./styles";
+import { useNavigation } from "@react-navigation/native";
+
+import { useUser } from "@realm/react";
+
+import { BoxButton } from "@/components/BoxButton";
+
+import { Image } from "expo-image";
 
 import {
-  useForegroundPermissions,
-  useBackgroundPermissions,
-  watchPositionAsync,
-  LocationAccuracy,
-  LocationSubscription,
-  requestBackgroundPermissionsAsync,
-} from "expo-location";
-import { Map } from "@/components/Map";
-import { LatLng } from "react-native-maps";
-import { storageRunDelete, storageRunSave } from "@/libs/storage/storage-run";
-import { startLocationTask } from "@/tasks/backgroundLocationTasks";
+  Container,
+  Content,
+  EmptyContent,
+  EmptyMessage,
+  EmptyTitle,
+  RemoveButton,
+  Separator,
+  Spinner,
+} from "./styles";
+import { useTheme } from "styled-components/native";
+
+import { PostCard, RunHistoryProps } from "@/components/PostCard";
+import { Header } from "@/components/Header";
+
+import { Historic } from "@/libs/realm/schemas/Historic";
+import { useQuery, useRealm } from "@/libs/realm";
+
+import { Trash } from "phosphor-react-native";
 
 export function Home() {
-  const [isLoadingLocation, setIsLoadingLocation] = useState(true);
-  const [currentCoords, setCurrentCoords] = useState<LatLng | null>(null);
-  const [locationForegroundPermission, requestLocationForegroundPermission] =
-    useForegroundPermissions();
-  const [status, requestPermission] = useBackgroundPermissions();
+  const [runHistory, setRunHistory] = useState<RunHistoryProps[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    requestLocationForegroundPermission();
-    requestPermission();
-  }, []);
+  const swipeableRef = useRef<Swipeable[]>([]);
+  const historic = useQuery(Historic);
+  const navigation = useNavigation();
+  const { COLORS } = useTheme();
+  const realm = useRealm();
+  const user = useUser();
 
-  useEffect(() => {
-    if (!locationForegroundPermission?.granted) {
-      return;
-    }
+  const emptyImageURI =
+    "https://images.unsplash.com/photo-1502224562085-639556652f33?q=80&w=2028&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
-    let subscription: LocationSubscription;
+  function handleDelete(postId: string, index: number) {
+    swipeableRef.current?.[index].close();
 
-    watchPositionAsync(
+    Alert.alert("Excluir", "Tem certeza que deseja excluir está corrida?", [
       {
-        accuracy: LocationAccuracy.Highest,
-        timeInterval: 1000,
+        style: "cancel",
+        text: "Não",
       },
-      (location) => {
-        setCurrentCoords(location.coords);
-        setIsLoadingLocation(false);
-      }
-    ).then((response) => (subscription = response));
-
-    return () => {
-      if (subscription) {
-        subscription.remove();
-      }
-    };
-  }, [locationForegroundPermission?.granted]);
-
-  async function handleStartRun() {
-    if (!currentCoords?.latitude && !currentCoords?.longitude) {
-      return Alert.alert(
-        "Localização",
-        "Não foi possível obter a localização atual. Tente novamente."
-      );
-    }
-
-    if (!status?.granted) {
-      return Alert.alert(
-        "Localização",
-        'É necessário permitir que o App tenha acesso localização em segundo plano. Acesse as configurações do dispositivo e habilite "Permitir o tempo todo."'
-      );
-    }
-    console.log(status);
-    await startLocationTask();
+      {
+        text: "Sim",
+        onPress: () => deletePost(postId),
+      },
+    ]);
   }
 
-  async function handleStopRun() {
-    if (!currentCoords?.latitude && !currentCoords?.longitude) {
-      return Alert.alert(
-        "Localização",
-        "Não foi possível obter a localização atual. Tente novamente."
-      );
-    }
+  async function deletePost(postId: string) {
+    const postSelected = historic.filter(
+      (item) => item._id.toString() === postId
+    );
 
-    await storageRunSave({
-      coords: [
-        {
-          latitude: currentCoords.latitude,
-          longitude: currentCoords.longitude,
-          timestamp: new Date().getTime(),
-        },
-      ],
+    realm.write(() => {
+      realm.delete(postSelected);
     });
   }
 
-  if (!locationForegroundPermission?.granted) {
-    return (
-      <Container>
-        <Message>
-          Você precisa permitir que o aplicativo tenha acesso a localização para
-          acessar essa funcionalidade. Por favor, acesse as configurações do seu
-          dispositivo para conceder a permissão ao aplicativo.
-        </Message>
-      </Container>
-    );
+  function fetchHistoric() {
+    try {
+      const formattedHistoric = historic.map((item) => {
+        return {
+          id: item._id.toString(),
+          run_time: item.run_time,
+          run_pace: item.run_pace,
+          run_distance: item.run_distance,
+          coords: item.coords.map((coord) => ({
+            latitude: coord.latitude,
+            longitude: coord.longitude,
+          })),
+          created_at: item.created_at,
+        };
+      });
+
+      setRunHistory(formattedHistoric);
+    } catch (error) {
+      console.error(error);
+
+      Alert.alert(
+        "Erro",
+        "Não foi possível obter o histórico de corridas. Por favor tente novamente mais tarde."
+      );
+    } finally {
+      setIsLoading(false);
+    }
   }
 
-  if (isLoadingLocation) {
-    <Message>Carregando.</Message>;
-  }
+  useEffect(() => {
+    fetchHistoric();
+  }, [historic]);
+
+  useEffect(() => {
+    realm.addListener("change", () => fetchHistoric());
+
+    return () => {
+      if (realm && !realm.isClosed) {
+        realm.removeListener("change", fetchHistoric);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    realm.subscriptions.update((mutableSubs, realm) => {
+      const historicByUserQuery = realm
+        .objects("Historic")
+        .filtered(`user_id = '${user.id}'`);
+
+      mutableSubs.add(historicByUserQuery, { name: "historic_by_user" });
+    });
+  }, [realm]);
 
   return (
     <Container>
-      {currentCoords && <Map coordinates={[currentCoords]} />}
+      <Header pageTitle="Início" buttonText="" handlePress={() => {}} />
 
-      <TouchableOpacity
-        onPress={handleStartRun}
-        style={{
-          backgroundColor: "orange",
-          alignItems: "center",
-          padding: 10,
-          marginTop: 10,
-        }}
-      >
-        <Text>Iniciar corrida</Text>
-      </TouchableOpacity>
+      <Content>
+        <FlatList
+          data={runHistory}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item, index }) => (
+            <Swipeable
+              ref={(ref) => {
+                if (ref) {
+                  swipeableRef.current.push(ref);
+                }
+              }}
+              overshootLeft={false}
+              leftThreshold={100}
+              renderRightActions={() => null}
+              renderLeftActions={() => (
+                <RemoveButton>
+                  <Trash size={32} color={COLORS.GRAY_300} />
+                </RemoveButton>
+              )}
+              onSwipeableOpen={() => handleDelete(item.id, index)}
+            >
+              <PostCard data={item} />
+            </Swipeable>
+          )}
+          ItemSeparatorComponent={() => <Separator />}
+          ListEmptyComponent={
+            isLoading ? null : (
+              <>
+                <Image
+                  source={{
+                    uri: emptyImageURI,
+                  }}
+                  contentFit="cover"
+                  transition={1000}
+                  style={{ height: 200 }}
+                />
+                <EmptyContent>
+                  <EmptyTitle>Desafie-se e comece agora!</EmptyTitle>
+                  <EmptyMessage>
+                    Está na hora de colocar os tênis e explorar novas trilhas.
+                    Inicie sua corrida agora!
+                  </EmptyMessage>
 
-      <TouchableOpacity
-        onPress={handleStopRun}
-        style={{
-          backgroundColor: "red",
-          alignItems: "center",
-          padding: 10,
-          marginTop: 10,
-        }}
-      >
-        <Text>Finalizar corrida</Text>
-      </TouchableOpacity>
+                  <BoxButton
+                    title="Começar uma nova corrida"
+                    onPress={() => navigation.navigate("runStart")}
+                  />
+                </EmptyContent>
+              </>
+            )
+          }
+          ListFooterComponent={isLoading ? <Spinner /> : null}
+          showsVerticalScrollIndicator={false}
+        />
+      </Content>
     </Container>
   );
 }
