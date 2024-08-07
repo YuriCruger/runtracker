@@ -61,22 +61,34 @@ export function Home() {
 
   async function deletePost(postId: string) {
     const postSelected = historic.filter(
-      (item) => item._id.toString() === postId
+      (item) =>
+        item.user_id.toString() === user.id && item._id.toString() === postId
     );
 
-    realm.write(() => {
-      realm.delete(postSelected);
-    });
+    if (postSelected) {
+      realm.write(() => {
+        realm.delete(postSelected);
+      });
+    } else {
+      Alert.alert("Erro", "Corrida não encontrada.");
+    }
+    console.log("Post deletado ");
   }
 
   function fetchHistoric() {
     try {
-      const formattedHistoric = historic.map((item) => {
+      const sortedHistoric = realm
+        .objects(Historic)
+        .filtered(`user_id = '${user.id}'`)
+        .sorted("created_at", true);
+
+      const formattedHistoric = sortedHistoric.map((item) => {
         return {
           id: item._id.toString(),
           run_time: item.run_time,
           run_pace: item.run_pace,
           run_distance: item.run_distance,
+          location: item.location,
           coords: item.coords.map((coord) => ({
             latitude: coord.latitude,
             longitude: coord.longitude,
@@ -84,7 +96,6 @@ export function Home() {
           created_at: item.created_at,
         };
       });
-
       setRunHistory(formattedHistoric);
     } catch (error) {
       console.error(error);
@@ -100,7 +111,7 @@ export function Home() {
 
   useEffect(() => {
     fetchHistoric();
-  }, [historic]);
+  }, []);
 
   useEffect(() => {
     realm.addListener("change", () => fetchHistoric());
@@ -121,7 +132,6 @@ export function Home() {
       mutableSubs.add(historicByUserQuery, { name: "historic_by_user" });
     });
   }, [realm]);
-
   return (
     <Container>
       <Header pageTitle="Início" buttonText="" handlePress={() => {}} />

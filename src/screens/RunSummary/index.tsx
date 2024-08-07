@@ -2,45 +2,48 @@ import React, { useEffect, useState } from "react";
 import { Alert } from "react-native";
 import { LatLng } from "react-native-maps";
 import { useNavigation } from "@react-navigation/native";
-
 import { Container, StatsContent } from "./styles";
-
 import { StatsCard } from "@/components/StatsCard";
 import { Separator } from "@/components/Separator";
 import { Header } from "@/components/Header";
 import { RoundButton } from "@/components/RoundButton";
 import { Map } from "@/components/Map";
-
 import { useUser } from "@realm/react";
-
 import { useRealm } from "@/libs/realm";
 import { Historic } from "@/libs/realm/schemas/Historic";
-
 import {
   storageLocationsDelete,
   storageLocationsGet,
 } from "@/libs/storage/storage-location";
-
 import {
-  Details,
   storageRunDetailsDelete,
   storageRunDetailsGet,
+  Details,
 } from "@/libs/storage/storage-run-details";
+import { getCityAndStateFromCoordinates } from "@/utils/getCityAndStateFromCoordinates";
+import { LocationSchemaProps } from "@/libs/realm/schemas/Location";
+import { calculateMaxSpeed } from "@/utils/calculateMaxSpeed";
+
+type RunDetailsProps = {
+  maxSpeed: string;
+  distance: string;
+  pace: string;
+  elapsedTime: string;
+};
 
 export function RunSummary() {
   const [runCoordinates, setRunCoordinates] = useState<LatLng[]>([]);
-  const [runDetails, setRunDetails] = useState<Details | null>(null);
+  const [runDetails, setRunDetails] = useState<RunDetailsProps | null>(null);
   const [isPosting, setIsPosting] = useState(false);
+  const [location, setLocation] = useState<LocationSchemaProps | null>(null);
 
   const navigation = useNavigation();
-
   const realm = useRealm();
-
   const user = useUser();
 
   async function handlePostRun() {
     try {
-      if (!runDetails) {
+      if (!runDetails || !location) {
         return;
       }
 
@@ -54,6 +57,10 @@ export function RunSummary() {
             run_distance: runDetails.distance,
             run_pace: runDetails.pace,
             run_time: runDetails.elapsedTime,
+            location: {
+              city: location.city,
+              state: location.state,
+            },
             coords: runCoordinates,
           })
         );
@@ -65,7 +72,6 @@ export function RunSummary() {
       navigation.navigate("home");
     } catch (error) {
       console.error(error);
-
       setIsPosting(false);
 
       Alert.alert(
@@ -97,19 +103,40 @@ export function RunSummary() {
     navigation.navigate("home");
   }
 
-  async function getLocationInfo() {
-    const locationsStorage = await storageLocationsGet();
+  useEffect(() => {
+    async function loadRunData() {
+      const locationsStorage = await storageLocationsGet();
+      setRunCoordinates(locationsStorage);
 
-    setRunCoordinates(locationsStorage);
+      const maxSpeed = calculateMaxSpeed(locationsStorage);
 
-    const detailsStorage = await storageRunDetailsGet();
+      const detailsStorage = await storageRunDetailsGet();
 
-    setRunDetails(detailsStorage);
-  }
+      const formatRunDetails = {
+        maxSpeed,
+        distance: detailsStorage.distance,
+        elapsedTime: detailsStorage.elapsedTime,
+        pace: detailsStorage.pace,
+      };
+
+      setRunDetails(formatRunDetails);
+    }
+
+    loadRunData();
+  }, []);
 
   useEffect(() => {
-    getLocationInfo();
-  }, []);
+    async function fetchCityAndState() {
+      if (runCoordinates.length > 0) {
+        const locationData = await getCityAndStateFromCoordinates(
+          runCoordinates[0]
+        );
+        setLocation(locationData);
+      }
+    }
+
+    fetchCityAndState();
+  }, [runCoordinates]);
 
   return (
     <Container>
@@ -154,8 +181,8 @@ export function RunSummary() {
             <Separator direction="VERTICAL" />
 
             <StatsCard
-              title="distância (km)"
-              statistic={runDetails.distance}
+              title="Velocidade máx (km/h)"
+              statistic={runDetails.maxSpeed}
               hideUnityLabel
               size="SMALL"
             />

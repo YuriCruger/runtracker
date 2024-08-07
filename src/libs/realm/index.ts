@@ -4,6 +4,7 @@ import { OpenRealmBehaviorConfiguration, OpenRealmBehaviorType } from "realm";
 
 import { Historic } from "./schemas/Historic";
 import { Coords } from "./schemas/Coords";
+import { Location } from "./schemas/Location";
 
 const realmAccessBehavior: OpenRealmBehaviorConfiguration = {
   type: OpenRealmBehaviorType.OpenImmediately,
@@ -21,6 +22,6 @@ export const {
   useObject, // Acesso reativo a um objeto específico no Realm
   useQuery, // Acesso reativo a uma coleção de objetos de um tipo específico no Realm
 } = createRealmContext({
-  schema: [Historic, Coords],
+  schema: [Historic, Coords, Location],
   schemaVersion: 0,
 });

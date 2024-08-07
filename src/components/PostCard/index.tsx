@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { LatLng } from "react-native-maps";
 
@@ -15,11 +14,6 @@ import {
   UserName,
 } from "./styles";
 
-import {
-  CityAndStateResponse,
-  getCityAndStateFromCoordinates,
-} from "@/utils/getCityAndStateFromCoordinates";
-
 import { Image } from "expo-image";
 
 import { SneakerMove } from "phosphor-react-native";
@@ -32,12 +26,14 @@ import { useUser } from "@realm/react";
 
 import { formatDate } from "@/utils/formatDate";
 import { getPeriodOfDay } from "@/utils/getPeriodOfDay";
+import { LocationSchemaProps } from "@/libs/realm/schemas/Location";
 
 export type RunHistoryProps = {
   id: string;
   run_time: string;
   run_pace: string;
   run_distance: string;
+  location: LocationSchemaProps;
   coords: LatLng[];
   created_at: Date;
 };
@@ -47,8 +43,6 @@ type Props = {
 };
 
 export function PostCard({ data }: Props) {
-  const [location, setLocation] = useState<CityAndStateResponse | null>(null);
-
   const { COLORS } = useTheme();
   const user = useUser();
 
@@ -56,17 +50,6 @@ export function PostCard({ data }: Props) {
   const periodOfDay = getPeriodOfDay(new Date(data.created_at));
 
   const blurhash = "L184i9ofa}of00ayfQay~qj[fQj[";
-
-  async function fetchLocation() {
-    const locationData = await getCityAndStateFromCoordinates(data.coords[0]);
-    if (locationData) {
-      setLocation(locationData);
-    }
-  }
-
-  useEffect(() => {
-    fetchLocation();
-  }, [data.coords]);
 
   return (
     <Container>
@@ -87,7 +70,8 @@ export function PostCard({ data }: Props) {
               <SneakerMove size={16} color={COLORS.GRAY_200} />
 
               <InfoRun>
-                {formatedDate} · {`${location?.city}, ${location?.state}`}
+                {formatedDate} ·{" "}
+                {`${data.location.city}, ${data.location.state}`}
               </InfoRun>
             </Group>
           </View>

@@ -29,11 +29,12 @@ TaskManager.defineTask<MyTaskData>(
         throw new Error("No location data available");
       }
 
-      const { coords } = data.locations[0];
+      const { coords, timestamp } = data.locations[0];
 
       const currentLocation = {
         latitude: coords.latitude,
         longitude: coords.longitude,
+        timestamp,
       };
 
       await storageLocationsSave(currentLocation);

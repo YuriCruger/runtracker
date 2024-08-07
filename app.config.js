@@ -13,7 +13,7 @@ module.exports = {
     splash: {
       image: "./assets/splash.png",
       resizeMode: "contain",
-      backgroundColor: "#ffffff",
+      backgroundColor: "#202024",
     },
     ios: {
       bundleIdentifier: "com.yuricruger.runtracker",
@@ -58,5 +58,10 @@ module.exports = {
         },
       ],
     ],
+    extra: {
+      eas: {
+        projectId: "e1efc199-0228-4526-92ec-d9044d9f3b3e",
+      },
+    },
   },
 };

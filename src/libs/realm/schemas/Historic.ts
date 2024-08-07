@@ -1,11 +1,13 @@
 import { BSON, Object, ObjectSchema } from "realm";
 import { CoordsSchemaProps } from "./Coords";
+import { LocationSchemaProps } from "./Location";
 
 type GenerateProps = {
   user_id: string;
   run_time: string;
   run_pace: string;
   run_distance: string;
+  location: LocationSchemaProps;
   coords: CoordsSchemaProps[];
 };
 
@@ -15,6 +17,7 @@ export class Historic extends Object<Historic> {
   run_time!: string;
   run_pace!: string;
   run_distance!: string;
+  location!: LocationSchemaProps;
   coords!: CoordsSchemaProps[];
   created_at!: Date;
   updated_at!: Date;
@@ -24,6 +27,7 @@ export class Historic extends Object<Historic> {
     run_time,
     run_pace,
     run_distance,
+    location,
     coords,
   }: GenerateProps) {
     return {
@@ -32,6 +36,7 @@ export class Historic extends Object<Historic> {
       run_time,
       run_pace,
       run_distance,
+      location,
       coords,
       created_at: new Date(),
       updated_at: new Date(),
@@ -51,6 +56,7 @@ export class Historic extends Object<Historic> {
       run_time: "string",
       run_pace: "string",
       run_distance: "string",
+      location: "Location",
       coords: {
         type: "list",
         objectType: "Coords",
