@@ -72,7 +72,6 @@ export function Home() {
     } else {
       Alert.alert("Erro", "Corrida não encontrada.");
     }
-    console.log("Post deletado ");
   }
 
   function fetchHistoric() {
@@ -132,6 +131,7 @@ export function Home() {
       mutableSubs.add(historicByUserQuery, { name: "historic_by_user" });
     });
   }, [realm]);
+
   return (
     <Container>
       <Header pageTitle="Início" buttonText="" handlePress={() => {}} />
