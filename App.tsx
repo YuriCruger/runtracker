@@ -13,9 +13,9 @@ import {
 
 import { AppProvider, UserProvider } from "@realm/react";
 
-import { Loading } from "@/components/Loading";
+import { Loading } from "@/components";
 
-import { RealmProvider, syncConfig } from "@/libs/realm";
+import { RealmProvider, syncConfig } from "@/libs";
 
 import { SignIn } from "@/screens/SignIn";
 

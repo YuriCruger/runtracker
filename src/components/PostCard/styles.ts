@@ -17,22 +17,31 @@ export const UserInfo = styled.View`
   align-items: center;
 `;
 
+export const UserInfoContainer = styled.View`
+  flex: 1;
+`;
+
+export const UserNameRow = styled.View`
+  flex-direction: row;
+`;
+
 export const UserName = styled.Text`
   ${({ theme }) => css`
     font-size: ${theme.FONT_SIZE.XS}px;
     font-family: ${theme.FONT_FAMILY.BOLD};
     color: ${theme.COLORS.WHITE};
     margin-bottom: 4px;
+    flex: 1;
   `}
 `;
 
-export const Group = styled.View`
+export const RunInfoRow = styled.View`
   flex-direction: row;
   align-items: center;
   gap: 6px;
 `;
 
-export const InfoRun = styled.Text`
+export const RunInfoText = styled.Text`
   ${({ theme }) => css`
     font-size: ${theme.FONT_SIZE.XXS}px;
     font-family: ${theme.FONT_FAMILY.REGULAR};

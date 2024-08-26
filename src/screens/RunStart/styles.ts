@@ -34,8 +34,3 @@ export const ButtonText = styled.Text`
 export const StatsContent = styled.View`
   flex: 1;
 `;
-
-export const MapSkeleton = styled.View`
-  flex: 1;
-  background-color: ${({ theme }) => theme.COLORS.GRAY_300};
-`;

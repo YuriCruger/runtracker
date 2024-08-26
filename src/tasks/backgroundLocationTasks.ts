@@ -1,7 +1,4 @@
-import {
-  storageLocationsDelete,
-  storageLocationsSave,
-} from "@/libs/storage/storage-location";
+import { storageLocationsDelete, storageLocationsSave } from "@/libs";
 import {
   Accuracy,
   hasStartedLocationUpdatesAsync,
