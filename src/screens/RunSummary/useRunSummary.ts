@@ -25,6 +25,8 @@ export function useRunSummary() {
   const [runDetails, setRunDetails] = useState<RunDetails | null>(null);
   const [runCoordinates, setRunCoordinates] = useState<LatLng[]>([]);
   const [location, setLocation] = useState<LocationSchemaProps | null>(null);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(true);
+
   const navigation = useNavigation();
   const realm = useRealm();
   const user = useUser();
@@ -95,29 +97,31 @@ export function useRunSummary() {
     navigation.navigate("home");
   }
 
-  useEffect(() => {
-    async function loadRunData() {
-      const locationsStorage = await storageLocationsGet();
-      setRunCoordinates(locationsStorage);
+  async function loadRunData() {
+    const locationsStorage = await storageLocationsGet();
+    setRunCoordinates(locationsStorage);
 
-      const detailsStorage = await storageRunDetailsGet();
+    const detailsStorage = await storageRunDetailsGet();
 
-      setRunDetails(detailsStorage);
+    setRunDetails(detailsStorage);
+  }
+
+  async function fetchCityAndState() {
+    if (runCoordinates.length > 0) {
+      const locationData = await getCityAndStateFromCoordinates(
+        runCoordinates[0]
+      );
+      setLocation(locationData);
+
+      setIsLoadingLocation(false);
     }
+  }
 
+  useEffect(() => {
     loadRunData();
   }, []);
 
   useEffect(() => {
-    async function fetchCityAndState() {
-      if (runCoordinates.length > 0) {
-        const locationData = await getCityAndStateFromCoordinates(
-          runCoordinates[0]
-        );
-        setLocation(locationData);
-      }
-    }
-
     fetchCityAndState();
   }, [runCoordinates]);
 
@@ -127,5 +131,6 @@ export function useRunSummary() {
     runCoordinates,
     runDetails,
     isPosting,
+    isLoadingLocation,
   };
 }

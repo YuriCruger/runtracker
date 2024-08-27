@@ -63,7 +63,6 @@ export function useHome() {
       }));
 
       setRunHistory(formattedHistoric);
-      console.log("function fetchRunHistory be called");
     } catch (error) {
       console.error(error);
       Alert.alert(

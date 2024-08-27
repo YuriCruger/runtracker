@@ -2,7 +2,14 @@ import React from "react";
 
 import { Container, StatsContent } from "./styles";
 
-import { StatsCard, Separator, Header, RoundButton, Map } from "@/components";
+import {
+  StatsCard,
+  Separator,
+  Header,
+  RoundButton,
+  Map,
+  Loading,
+} from "@/components";
 
 import { useRunSummary } from "./useRunSummary";
 
@@ -13,6 +20,7 @@ export function RunSummary() {
     isPosting,
     runCoordinates,
     runDetails,
+    isLoadingLocation,
   } = useRunSummary();
 
   return (
@@ -23,35 +31,39 @@ export function RunSummary() {
         handlePress={() => handleDeleteRun()}
       />
 
-      {runCoordinates.length > 0 && <Map coordinates={runCoordinates} />}
-
-      {runDetails && (
+      {isLoadingLocation ? (
+        <Loading />
+      ) : (
         <>
-          <StatsContent>
-            <StatsCard
-              title="tempo"
-              statistic={runDetails.elapsedTime}
-              hideUnityLabel
-              size="SMALL"
-            />
+          <Map coordinates={runCoordinates} />
 
-            <Separator direction="VERTICAL" />
+          {runDetails && (
+            <StatsContent>
+              <StatsCard
+                title="tempo"
+                statistic={runDetails.elapsedTime}
+                hideUnityLabel
+                size="SMALL"
+              />
 
-            <StatsCard
-              title="ritmo médio (/km)"
-              statistic={runDetails.pace}
-              hideUnityLabel
-              size="SMALL"
-            />
+              <Separator direction="VERTICAL" />
 
-            <Separator direction="VERTICAL" />
-            <StatsCard
-              title="distância (km)"
-              statistic={runDetails.distance}
-              hideUnityLabel
-              size="SMALL"
-            />
-          </StatsContent>
+              <StatsCard
+                title="ritmo médio (/km)"
+                statistic={runDetails.pace}
+                hideUnityLabel
+                size="SMALL"
+              />
+
+              <Separator direction="VERTICAL" />
+              <StatsCard
+                title="distância (km)"
+                statistic={runDetails.distance}
+                hideUnityLabel
+                size="SMALL"
+              />
+            </StatsContent>
+          )}
         </>
       )}
 
