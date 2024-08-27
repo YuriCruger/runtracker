@@ -6,31 +6,6 @@ type CoordinateProps = {
   timestamp: number;
 };
 
-export function calculateMaxSpeed(coordinates: CoordinateProps[]): string {
-  let maxSpeed = 0;
-
-  for (let i = 1; i < coordinates.length; i++) {
-    const dist = calculateGeographicalDistance(
-      coordinates[i - 1].latitude,
-      coordinates[i - 1].longitude,
-      coordinates[i].latitude,
-      coordinates[i].longitude
-    );
-
-    const timeDiff =
-      (coordinates[i].timestamp - coordinates[i - 1].timestamp) / 3600000; // Convert to hours
-
-    if (timeDiff > 0) {
-      const speed = dist / timeDiff; // Speed in km/h
-      if (speed > maxSpeed) {
-        maxSpeed = speed;
-      }
-    }
-  }
-
-  return maxSpeed.toFixed(2).toString();
-}
-
 export function calculatePacePerKm(elapsedTime: number, totalDistance: number) {
   if (totalDistance === 0) return 0;
 

@@ -1,6 +1,5 @@
 export {
   calculateGeographicalDistance,
-  calculateMaxSpeed,
   calculatePacePerKm,
   calculateTotalDistance,
 } from "./calculations";
