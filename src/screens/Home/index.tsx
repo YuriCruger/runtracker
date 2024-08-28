@@ -21,11 +21,12 @@ export function Home() {
   } = useHome();
 
   useEffect(() => {
-    fetchRunHistory();
-  }, [historic]);
-
-  useEffect(() => {
     updateUserHistoricSubscription();
+
+    realm.addListener("change", () => fetchRunHistory());
+    if (realm && !realm.isClosed) {
+      realm.removeListener("change", fetchRunHistory);
+    }
   }, [realm]);
 
   return (
