@@ -15,7 +15,6 @@ export function Home() {
     isFetchingHistory,
     runHistory,
     updateUserHistoricSubscription,
-    historic,
     realm,
     user,
   } = useHome();
