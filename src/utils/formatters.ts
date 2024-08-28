@@ -1,5 +1,6 @@
 import { isToday, isYesterday, format } from "date-fns";
 import { convertToTimeZone } from "./convertToTimeZone";
+import { ptBR } from "date-fns/locale";
 
 export const formatDate = (date: Date) => {
   const dateInTimeZone = convertToTimeZone(date);
@@ -9,7 +10,9 @@ export const formatDate = (date: Date) => {
   } else if (isYesterday(dateInTimeZone)) {
     return `Ontem às ${format(dateInTimeZone, "HH:mm")}`;
   } else {
-    return `${format(dateInTimeZone, "dd [de] MMMM [às] HH:mm")}`;
+    return `${format(dateInTimeZone, "d 'de' MMMM 'de' yyyy 'às' HH:mm", {
+      locale: ptBR,
+    })}`;
   }
 };
 
