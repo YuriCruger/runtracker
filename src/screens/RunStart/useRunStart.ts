@@ -113,7 +113,7 @@ export function useRunStart() {
 
     watchPositionAsync(
       {
-        accuracy: LocationAccuracy.Highest,
+        accuracy: LocationAccuracy.BestForNavigation,
         timeInterval: 1000,
       },
       (location) => {
